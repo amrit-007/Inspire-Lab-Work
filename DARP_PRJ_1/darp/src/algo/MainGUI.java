@@ -5,16 +5,17 @@ package algo;
      import java.awt.event.*;
      import java.util.*;
      import javax.swing.*;
-     import javax.swing.event.ChangeEvent;
-     import javax.swing.event.ChangeListener;
+     import java.io.*;
+     //import javax.swing.event.ChangeEvent;
+     //import javax.swing.event.ChangeListener;
  
 			public class MainGUI
 			{
         	 private int c1=0;
         	 private ArrayList<Color> colorArr;
 			 public Thread t1;	//Thread for all the robots to start moving
-			 public static int rangeView=2; //Range of robot sensing		
-			 public JSlider RangeSlider; //SpeedSlider for range selection
+			 public static int rangeView=100; //Range of robot sensing		
+			 //public JSlider RangeSlider; //SpeedSlider for range selection
 			 public static int robos=0; //Total number of robots in the field
 			 public static int[][] visitedGrid;//Grid to represent discovered terrain
 			 public static ArrayList<Robot> Robots; //List for Robots
@@ -23,26 +24,28 @@ package algo;
 			  * Image Icons for start run and stop buttons
 			  * 
 			  * */
-			 private final ImageIcon run_Hover = new ImageIcon("F:\\DARP_PRJ_1\\darp\\src\\resources\\run_Hover.png");
-			 private final ImageIcon run_Default = new ImageIcon("F:\\DARP_PRJ_1\\darp\\src\\resources\\run_Default.png");
-			 private final ImageIcon run_Pressed = new ImageIcon("F:\\DARP_PRJ_1\\darp\\src\\resources\\run_Pressed.png");
-			 private final ImageIcon abort_Hover = new ImageIcon("F:\\DARP_PRJ_1\\darp\\src\\resources\\abort_Hover.jpg");
-			 private final ImageIcon abort_Default = new ImageIcon("F:\\DARP_PRJ_1\\darp\\src\\resources\\abort_Default.png");
-			 private final ImageIcon abort_Pressed = new ImageIcon("F:\\DARP_PRJ_1\\darp\\src\\resources\\abort_Pressed.png");
-			 private final ImageIcon start_Default = new ImageIcon("F:\\DARP_PRJ_1\\darp\\src\\resources\\start3.png");
-			 private final ImageIcon start_Pressed = new ImageIcon("F:\\DARP_PRJ_1\\darp\\src\\resources\\start2.png");
+			 private final ImageIcon run_Hover = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\run_Hover.png");
+			 private final ImageIcon run_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\run_Default.png");
+			 private final ImageIcon run_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\run_Pressed.png");
+			 private final ImageIcon abort_Hover = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\abort_Hover.jpg");
+			 private final ImageIcon abort_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\abort_Default.png");
+			 private final ImageIcon abort_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\abort_Pressed.png");
+			 private final ImageIcon start_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\start3.png");
+			 private final ImageIcon start_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\start2.png");
 
 			 private JFrame mainFrame; // The Frame of panels
-			 private JLabel RangeLabel;
-			 private JLabel SpeedLabel;
+			 //private JLabel RangeLabel;
+			 //private JLabel SpeedLabel;
 			 private JPanel UserInputPanel; 
 			 private JPanel ConsolePanel;
 			 private JPanel RightPanel;
-			 private JComboBox<Integer> textboxRows;// Selection of Rows in Grid
-			 private JComboBox<Integer> textboxCols;// Selection of Cols in Grid
+			 //private JComboBox<Integer> textboxRows;// Selection of Rows in Grid
+			 //private JComboBox<Integer> textboxCols;// Selection of Cols in Grid
+               private JTextField textboxRows;
+               private JTextField textboxCols;
                private JLabel Title; // Title of the GUI
                private javax.swing.ButtonGroup Items; // All the RadioButtons
-			 private Color CurrColor = Color.MAGENTA; // Current Color to be painted
+			   private Color CurrColor = Color.MAGENTA; // Current Color to be painted
 			 /*
 			  * Four selection Radio Buttons for obstacles, unoccupied cell, Robot and Goals
 			  * */
@@ -50,22 +53,23 @@ package algo;
                private JRadioButton EmptyButton;
                private JRadioButton RobotButton;
                private JRadioButton RobotGoalButton;
-               
+               private JCheckBox SwitchGrid; //checkbox for switching gridlines on/off
+
                private JButton AbortDARP; // To stop the thread of moving robots
                private JButton startExp; // To Evaluate the path
-			 private JButton simMotion;	// To start the motion
+			   private JButton simMotion;	// To start the motion
                private javax.swing.JTextPane consoleToPrint; //The Black Console showing various outputs
                private MainGUI.GridPane ColorGrid; //The ColorGrid of panels
                public static int[][] EnvironmentGrid; // The Matrix for storing robots, obstacles and Goal Locations
                private JPanel SuperRadio; //Panel for the buttons
                public static int rows; //Rows in Grid
-		     public static int cols; //Columns in Grid 
-		     private int CurrentIDXAdd; //Whether Robot or obstacle or Goal is being added  
-		     private int axisScale; // Resizing the user panel according to number of rows and cols
+		       public static int cols; //Columns in Grid 
+		       private int CurrentIDXAdd; //Whether Robot or obstacle or Goal is being added  
+		       private int axisScale; // Resizing the user panel according to number of rows and cols
                public static int timer=500; // The time interval between successive robot motion i.e. speed regulation 
-			 public Robot m; // Robot object for utility
-               
-			 public JSlider SpeedSlider; // To Regulate the speed of the robot
+			   public Robot m; // Robot object for utility
+               //public int gridflag;
+			   //public JSlider SpeedSlider; // To Regulate the speed of the robot
                private int[][] ByteImage; // Utility matrix to retain the value of environment Grid
                
                
@@ -87,10 +91,12 @@ package algo;
 			   this.mainFrame = new JFrame("Multi-Robot Path Planning for unknown terrain");
 			   this.UserInputPanel = new JPanel();
                this.UserInputPanel.setLayout(new java.awt.FlowLayout(0));
-			   this.SpeedSlider=new JSlider(JSlider.HORIZONTAL, 10, 100, 10);
-			   this.RangeSlider=new JSlider(JSlider.HORIZONTAL,2,10,2);
-			   this.RangeSlider.addChangeListener(new RangeSliderListener());
-			   this.SpeedSlider.addChangeListener(new SpeedSliderListener());
+			   //this.SpeedSlider=new JSlider(JSlider.HORIZONTAL, 10, 100, 10);
+			   //this.RangeSlider=new JSlider(JSlider.HORIZONTAL,2,10,2);
+			   //this.RangeSlider.addChangeListener(new RangeSliderListener());
+			   //this.SpeedSlider.addChangeListener(new SpeedSliderListener());
+		       this.SwitchGrid = new JCheckBox("Gridlines");
+		       this.SwitchGrid.setBackground(Color.white);
 		       this.ObstaclesButton = new JRadioButton("Obstacle");
 		       this.ObstaclesButton.setBackground(Color.white);
 		       this.EmptyButton = new JRadioButton("Unoccupied Cell");
@@ -99,17 +105,23 @@ package algo;
 		       this.RobotButton.setBackground(Color.white);
 			   this.RobotGoalButton = new JRadioButton("Robot Goal");
 		       this.RobotGoalButton.setBackground(Color.white);
-		       this.RangeLabel=new JLabel("Range");
-		       this.SpeedLabel=new JLabel("Speed");
+		       //this.RangeLabel=new JLabel("Range");
+		       //this.SpeedLabel=new JLabel("Speed");
 		       this.CurrentIDXAdd = -1;
 		       this.axisScale = 400;
 		       this.ColorGrid = null;
-				Integer[] choices=new Integer[105];
-				for(int i=1;i<=100;i++)choices[i-1]=(i);
-		       this.textboxRows = new JComboBox<>(choices);
-		       this.textboxRows.setSelectedIndex(9);
-		       this.textboxCols = new JComboBox<>(choices);
-		       this.textboxCols.setSelectedIndex(9);
+		       this.textboxRows = new JTextField(3);
+		       this.textboxCols = new JTextField(3);
+
+		       //this.gridflag = 0;
+		       //textboxRows.setLayout(0,0,40,20);
+		       //textboxRows.setLayout(0,30,40,20);
+				//Integer[] choices=new Integer[105];
+				//for(int i=1;i<=100;i++)choices[i-1]=(i);
+		       //this.textboxRows = new JComboBox<>(choices);
+		       //this.textboxRows.setSelectedIndex(9);
+		       //this.textboxCols = new JComboBox<>(choices);
+		       //this.textboxCols.setSelectedIndex(9);
 		       DefineRightPanel();
                  
 		       this.mainFrame.getContentPane().add("East", this.RightPanel);
@@ -120,6 +132,49 @@ package algo;
                  
 		       this.mainFrame.setVisible(true);
                }
+
+               public void ReadTextFile() throws IOException 
+				{
+				    File inFile = new File ("C:\\Users\\Amrit\\Documents\\Eclipse\\test\\src\\resources\\input.txt");
+
+				    Scanner sc = new Scanner (inFile);
+				    String[] temp;
+				    int a,b,c,d,i,j;
+				    while (sc.hasNextLine())
+				    {
+				      String line = sc.nextLine();
+				      temp = line.split(" ");
+				      if(temp[0].equals("o"))
+				      {
+				    	a =  Integer.parseInt(temp[1]);
+				    	b =  Integer.parseInt(temp[2]);
+				    	c =  Integer.parseInt(temp[3]);
+				    	d =  Integer.parseInt(temp[4]);				    	
+				    	for(i=a;i<=b;i++)
+				    	{
+				    		for(j=c;j<=d;j++)
+				    		{
+				    			MainGUI.EnvironmentGrid[i][j] = 1;
+				    		}
+				    	}
+				      }
+				      else if(temp[0].equals("r"))
+				      {
+				    	a =  Integer.parseInt(temp[1]);
+					    b =  Integer.parseInt(temp[2]);
+					    MainGUI.EnvironmentGrid[a][b] = 2;
+				      }
+				      else if(temp[0].equals("t"))
+				      {
+				    	a =  Integer.parseInt(temp[1]);
+					    b =  Integer.parseInt(temp[2]);
+					    MainGUI.EnvironmentGrid[a][b] = 3;
+				      }
+				      
+				    }
+				    sc.close();
+				  
+				}
                
              
                private void DefineRightPanel() //Defines the Right Panel with details
@@ -237,7 +292,7 @@ package algo;
               * Action Listener for start
               * 
               * */
-               private void DefineRobotsObstacles()
+               private void DefineRobotsObstacles() throws IOException
                {
 		       this.UserInputPanel.removeAll();
 		       this.UserInputPanel.setBackground(Color.white);
@@ -256,6 +311,7 @@ package algo;
 		       JPanel RadioAreaButtons = new JPanel();
 		       RadioAreaButtons.setBackground(Color.WHITE);
 		       this.Items = new javax.swing.ButtonGroup();
+		       this.Items.add(this.SwitchGrid);
 		       this.Items.add(this.ObstaclesButton);
 		       this.Items.add(this.EmptyButton);
 		       this.Items.add(this.RobotButton);
@@ -266,33 +322,37 @@ package algo;
 		       this.ObstaclesButton.setSelected(true);
 		       this.CurrentIDXAdd = 1;
 		       this.CurrColor = Color.BLACK;
+
 		       appendToPane("Click to add an obstacle\n\n", Color.WHITE);
                  
              
 		       RadioAreaButtons.setLayout(new javax.swing.BoxLayout(RadioAreaButtons, 1));
+		       RadioAreaButtons.add(this.SwitchGrid, "West");
 		       RadioAreaButtons.add(this.ObstaclesButton, "West");
 		       RadioAreaButtons.add(this.EmptyButton, "West");
 		       RadioAreaButtons.add(this.RobotButton, "West");
 		       RadioAreaButtons.add(this.RobotGoalButton, "West");
 				
-		       JPanel SliderPanel = new JPanel();
-		       SliderPanel.setBackground(Color.WHITE);
-		       SliderPanel.add(this.SpeedLabel);
-			   SliderPanel.add(this.SpeedSlider,"WEST");
-			   JPanel SliderPanel2 = new JPanel();
-			   SliderPanel2.add(this.RangeLabel);
-		       SliderPanel2.setBackground(Color.WHITE);
-			   SliderPanel2.add(this.RangeSlider,"WEST");
+		       //JPanel SliderPanel = new JPanel();
+		       //SliderPanel.setBackground(Color.WHITE);
+		       //SliderPanel.add(this.SpeedLabel);
+			   //SliderPanel.add(this.SpeedSlider,"WEST");
+			   //JPanel SliderPanel2 = new JPanel();
+			   //SliderPanel2.add(this.RangeLabel);
+		      // SliderPanel2.setBackground(Color.WHITE);
+			  // SliderPanel2.add(this.RangeSlider,"WEST");
                  
                  
 		       this.SuperRadio = new JPanel();
 		       this.SuperRadio.setPreferredSize(new Dimension(265, 400));
 		       this.SuperRadio.setBackground(Color.WHITE);
 		       this.SuperRadio.add(RadioAreaButtons);
-				this.SuperRadio.add(SliderPanel);
-				this.SuperRadio.add(SliderPanel2);
+				//this.SuperRadio.add(SliderPanel);
+				//this.SuperRadio.add(SliderPanel2);
 		       this.SuperRadio.setBorder(BorderFactory.createTitledBorder("Elements"));
-                 
+               
+               //this.SwitchGrid.addItemListener(new MainGUI.CheckBoxListener());
+               this.SwitchGrid.setSize(100,100);  
 		       this.ObstaclesButton.addActionListener(new MainGUI.CurrentComponentToAdd());
 		       this.EmptyButton.addActionListener(new MainGUI.CurrentComponentToAdd());
 		       this.RobotButton.addActionListener(new MainGUI.CurrentComponentToAdd());
@@ -350,13 +410,10 @@ package algo;
 		       this.consoleToPrint.replaceSelection(msg);
 		       this.consoleToPrint.setEditable(false);
                }
-               
 
-               
 
-               
                //Change Listener for RangeSlider
-               private class RangeSliderListener implements ChangeListener{
+               /*private class RangeSliderListener implements ChangeListener{
             	   private RangeSliderListener(){}
 
 				@Override
@@ -366,9 +423,9 @@ package algo;
 					   rangeView=RangeSlider.getValue();
 				}
             	   
-               }
+               }*/
                //Change Listener for SpeedSlider
-               private class SpeedSliderListener implements ChangeListener{
+               /*private class SpeedSliderListener implements ChangeListener{
             	   private SpeedSliderListener(){}
 
 				@Override
@@ -376,7 +433,7 @@ package algo;
 					   MainGUI.this.appendToPane(SpeedSlider.getValue()+"\n", Color.white);
 					   timer=10000/SpeedSlider.getValue();
 					   }
-               }
+               }*/
                
             // Action Listener for simMotion Button
                private class simMotionListener implements ActionListener {
@@ -409,7 +466,7 @@ package algo;
 						           MainGUI.this.mainFrame.setVisible(true);
 						           MainGUI.this.mainFrame.repaint();
 									try {
-										Thread.sleep(timer);
+										Thread.sleep(100);
 									} catch (Exception e) {
 										e.printStackTrace();
 									}
@@ -440,6 +497,31 @@ package algo;
                  }
                }
                
+               /*private class CheckBoxListener implements ItemListener {
+	               	
+	               	public void itemStateChanged(ItemEvent e1)
+	               	{
+	               		if(e1.getSource()==SwitchGrid)
+	               		{
+	               			if(e1.getStateChange()==ItemEvent.SELECTED)
+	               			{	
+	               				MainGUI.this.gridflag = 1;
+	               				MainGUI.this.appendToPane("Gridlines ON\n\n", Color.WHITE);
+	               				//MainGUI.this.mainFrame.repaint();
+	               			}	
+	               			if(e1.getStateChange()==ItemEvent.DESELECTED)
+	               			{	
+	               				MainGUI.this.gridflag = 0;
+	               				MainGUI.this.appendToPane("Gridlines OFF\n\n", Color.WHITE);
+	               				//MainGUI.this.mainFrame.repaint();
+	               			}	
+	               		}
+
+
+
+	               		
+	               	}
+               	}	*/
                // Action Listener on changing the Radio Buttons
                private class CurrentComponentToAdd implements ActionListener { 
             	   
@@ -476,11 +558,16 @@ package algo;
                  public void actionPerformed(ActionEvent event) {
 		         if(true)  
 		            {
-					MainGUI.rows=textboxRows.getSelectedIndex()+1;
-					MainGUI.cols=textboxCols.getSelectedIndex()+1;
+					MainGUI.rows=Integer.parseInt(textboxRows.getText());
+					MainGUI.cols=Integer.parseInt(textboxCols.getText());
 		             MainGUI.this.appendToPane("The grid [" + MainGUI.rows + "," + MainGUI.cols + "] has been created\n\n", Color.WHITE);
 		             MainGUI.this.appendToPane("Define the Robots initial positions along with the fixed obstacles\n\n", Color.WHITE);
-		             MainGUI.this.DefineRobotsObstacles();
+		             try {
+						MainGUI.this.DefineRobotsObstacles();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
                    } 
 		         MainGUI.this.mainFrame.setVisible(true);
 		         MainGUI.this.mainFrame.repaint();
@@ -631,7 +718,7 @@ package algo;
                {
 				private static final long serialVersionUID = 1L;
 				boolean enable = true;
-                 GridPane()
+                 GridPane() throws IOException
                  {
 		         setLayout(new java.awt.GridLayout(MainGUI.rows + 1, MainGUI.cols + 1));
 		         setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
@@ -645,7 +732,10 @@ package algo;
                        
 		             pan.setPreferredSize(new Dimension(getWidth(), getHeight()));
 		             if ((i < MainGUI.rows) && (j >= 0)) {
-//		               pan.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		               
+		               if(MainGUI.rows < 60 || MainGUI.cols < 60) 	 
+		               		pan.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+		               
 		               pan.addMouseListener(new MainGUI.BoxListener());
 		               pan.setName(i + " " + j);
                        }
@@ -667,9 +757,10 @@ package algo;
                      }
                    }
                    
-             
+             		ReadTextFile();
 		         repaint();
                  }
+              
               
 
                  GridPane(int image[][],int robotNo){
@@ -707,7 +798,10 @@ package algo;
 		                 pan.setBackground(colorArr.get(image[i][j]-10000+10));
 		                 MainGUI.EnvironmentGrid[i][j] = image[i][j];
                          }
-//		               pan.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+		               if(MainGUI.rows < 60 || MainGUI.cols < 60) 	 
+		               		pan.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+		               
 		               pan.addMouseListener(new MainGUI.BoxListener());
 		               pan.setName(i + " " + j);
                        }
@@ -737,8 +831,7 @@ package algo;
       
     for (int i = 0; i < MainGUI.rows + 1; i++) {
       for (int j = -1; j < MainGUI.cols; j++) {
-        JPanel pan = new JPanel();
-          
+        JPanel pan = new JPanel();  
         pan.setEnabled(true);
         pan.setBackground(Color.GRAY);
         pan.setPreferredSize(new Dimension(getWidth(), getHeight()));	
@@ -770,7 +863,10 @@ package algo;
               MainGUI.EnvironmentGrid[i][j] = image[i][j];
               }
             visitedGrid[i][j]=1;
-//            pan.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+            if(MainGUI.rows < 60 || MainGUI.cols < 60) 	 
+		        pan.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+            
             pan.addMouseListener(new MainGUI.BoxListener());
             pan.setName(i + " " + j);
             }
@@ -791,7 +887,7 @@ package algo;
         add(pan);
         }
       }
-    repaint();
+    //repaint();
 }
                }
                

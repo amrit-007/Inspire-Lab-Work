@@ -24,14 +24,14 @@ package algo;
 			  * Image Icons for start run and stop buttons
 			  * 
 			  * */
-			 private final ImageIcon run_Hover = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\run_Hover.png");
-			 private final ImageIcon run_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\run_Default.png");
-			 private final ImageIcon run_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\run_Pressed.png");
-			 private final ImageIcon abort_Hover = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\abort_Hover.jpg");
-			 private final ImageIcon abort_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\abort_Default.png");
-			 private final ImageIcon abort_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\abort_Pressed.png");
-			 private final ImageIcon start_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\start3.png");
-			 private final ImageIcon start_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp\\src\\resources\\start2.png");
+			 private final ImageIcon run_Hover = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\run_Hover.png");
+			 private final ImageIcon run_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\run_Default.png");
+			 private final ImageIcon run_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\run_Pressed.png");
+			 private final ImageIcon abort_Hover = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\abort_Hover.jpg");
+			 private final ImageIcon abort_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\abort_Default.png");
+			 private final ImageIcon abort_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\abort_Pressed.png");
+			 private final ImageIcon start_Default = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\start3.png");
+			 private final ImageIcon start_Pressed = new ImageIcon("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\start2.png");
 
 			 private JFrame mainFrame; // The Frame of panels
 			 //private JLabel RangeLabel;
@@ -135,7 +135,7 @@ package algo;
 
                public void ReadTextFile() throws IOException 
 				{
-				    File inFile = new File ("C:\\Users\\Amrit\\Documents\\Eclipse\\test\\src\\resources\\input.txt");
+				    File inFile = new File ("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\input.txt");
 
 				    Scanner sc = new Scanner (inFile);
 				    String[] temp;

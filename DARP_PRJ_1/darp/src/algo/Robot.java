@@ -1,5 +1,6 @@
 package algo;
 
+//import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Queue;
@@ -18,6 +19,7 @@ public class Robot {
 	public static ArrayList<pair> ObsArray=new ArrayList<>(); // Coordinates of obstacles
 	public ArrayList<pair> path; // final calculated path
 	public ArrayList<pair> goalnrobot; // combined array list of robots and goals to be traversed in order
+	public static int velocity; //to store indi. velocities of each robot
 	public void addGoal(pair p){ // Append goal to array list of goals
 		Goals.add(p);
 	}
@@ -25,13 +27,17 @@ public class Robot {
 		RoboLoc=p;
 		Goals=new ArrayList<>();
 		path=new ArrayList<>();
+		velocity = 1; //using homogeneous value as of now for all
 	}
 
 	public void setPath(){  // BFS algorithm to determine shortest distance for a robot via all its goals
+		//PrintStream out = System.out; for testing purposes
 		
 		goalnrobot=new ArrayList<>();
 		goalnrobot.add(RoboLoc);
+		Goals.add(RoboLoc); //to bring back the robots to their starting coordinates
 		goalnrobot.addAll(Goals);
+		
 		int m=MainGUI.rows;
 		int n=MainGUI.cols;
 		for(int i = 0;i<MainGUI.rows;i++){
@@ -95,4 +101,8 @@ public class Robot {
 		}
 	}
 	}
+	/*private void println(int first, int second) {
+		// TODO Auto-generated method stub
+		
+	}*/
 }

@@ -20,6 +20,12 @@ package algo;
 			 public static int[][] visitedGrid;//Grid to represent discovered terrain
 			 public static ArrayList<Robot> Robots; //List for Robots
 			 public ArrayList<JPanel> selectedPanel; //Temporary assignment of goals to each robot
+			 public ArrayList<pair> listoftasks; //to store all tasks of the problem
+			 public ArrayList<Integer> costoftasks; //to store cost of service of each task 
+			 public static Integer numberoftasks; //to store the number of total tasks
+			 public static Integer numberofrobots;
+			 public ArrayList<pair> listofrobots; //to store all robots in the problem with their initial positions
+			 public static int[][][] travelcosts_ijk; //cost matrix for going from ith task to kth task by kth robot
 			 /*
 			  * Image Icons for start run and stop buttons
 			  * 
@@ -83,7 +89,8 @@ package algo;
 				return a1.get(0);
 				}
 
-               MainGUI() // Constructor
+               @SuppressWarnings("static-access")
+			MainGUI() // Constructor
                {
             	   colorArr=new ArrayList<>();
             	   Robots=new ArrayList<>();
@@ -112,7 +119,12 @@ package algo;
 		       this.ColorGrid = null;
 		       this.textboxRows = new JTextField(3);
 		       this.textboxCols = new JTextField(3);
-
+	
+		       this.numberoftasks = 0;
+		       this.numberofrobots=0;
+		       this.costoftasks = new ArrayList<Integer>();
+		       this.listoftasks = new ArrayList<pair>();
+		       this.listofrobots = new ArrayList<pair>();
 		       //this.gridflag = 0;
 		       //textboxRows.setLayout(0,0,40,20);
 		       //textboxRows.setLayout(0,30,40,20);
@@ -140,6 +152,7 @@ package algo;
 				    Scanner sc = new Scanner (inFile);
 				    String[] temp;
 				    int a,b,c,d,i,j;
+				    pair p;
 				    while (sc.hasNextLine())
 				    {
 				      String line = sc.nextLine();
@@ -162,20 +175,77 @@ package algo;
 				      {
 				    	a =  Integer.parseInt(temp[1]);
 					    b =  Integer.parseInt(temp[2]);
+					    p = new pair(a,b);
 					    MainGUI.EnvironmentGrid[a][b] = 2;
+					    MainGUI.numberofrobots++;
+					    listofrobots.add(p);
 				      }
 				      else if(temp[0].equals("t"))
 				      {
 				    	a =  Integer.parseInt(temp[1]);
 					    b =  Integer.parseInt(temp[2]);
+					    p = new pair(a,b); 
 					    MainGUI.EnvironmentGrid[a][b] = 3;
+					    MainGUI.numberoftasks++;
+					    costoftasks.add(1);
+					    listoftasks.add(p);
 				      }
 				      
 				    }
 				    sc.close();
-				  
+				 
+				    
+				   /* for(i=0;i<numberofrobots;i++)
+				    {
+				    	
+				    	System.out.println(listofrobots.get(i));
+				    }*/
+				    
 				}
                
+               //function to return h(n) value to apply AStar Algorithm
+               public int heuristic_value_calc(pair a,pair b){  
+            	   return(Math.abs(a.first-b.first) + Math.abs(a.second-b.second));
+               }
+               
+               //function to implement AStar Algorithm and find costs to travel between 2 nodes
+				public int astar_search(pair a,pair b){
+					
+					
+					return (0);
+				}
+               
+               //function to compute cost for travelling from ith to jth task by kth robot
+     			public void cost_calc(){
+
+     				MainGUI.travelcosts_ijk = new int[numberoftasks+1][numberoftasks+1][numberofrobots];
+
+     				int i,j,k;
+     				//int temp_nooftasks = MainGUI.numberoftasks;
+     				for(k=0;k<numberofrobots;k++)
+     				{
+	     				for(i=0;i<=MainGUI.numberoftasks;i++)
+	     				{
+	     					for(j=1;j<=MainGUI.numberoftasks;j++)
+	     					{
+
+	     						if(i==j)
+	     						{
+	     							MainGUI.travelcosts_ijk[i][j][k] = Integer.MAX_VALUE;
+	     						}	
+	     						if(i==0)
+	     						{
+	     							MainGUI.travelcosts_ijk[i][j][k] = astar_search(listofrobots.get(k),listoftasks.get(j));
+	     						}
+	     						
+	     						MainGUI.travelcosts_ijk[i][j][k] = astar_search(listoftasks.get(i),listoftasks.get(j));
+	     					}
+	     				}
+     				}	
+
+     			}
+
+
              
                private void DefineRightPanel() //Defines the Right Panel with details
                {
@@ -450,6 +520,8 @@ package algo;
 									// TODO Auto-generated method stub
 									return e1.path.size()-e2.path.size();
 								}}).path.size();
+							
+							//this loop is for coloring visited squares when simulation of the path is going on (while robot is moving)
 					  		for(int i=0;i<len;i++){
 					  			for(int j=0;j<Robots.size();j++){
 						  			if(i+1<Robots.get(j).path.size()){
@@ -806,7 +878,8 @@ package algo;
 		               pan.setName(i + " " + j);
                        }
 		             else if ((i == MainGUI.rows) && (j < 0)) { pan.add(new JLabel(" "));
-		             } else if (i == MainGUI.rows) {
+		             } 
+		             else if (i == MainGUI.rows) {
 		               JLabel axisLabel = new JLabel(Integer.toString(j));
 		               axisLabel.setFont(new Font("serif", 1, MainGUI.this.axisScale / MainGUI.cols));
 		               pan.add(axisLabel);
@@ -828,13 +901,14 @@ package algo;
     
     setLayout(new java.awt.GridLayout(MainGUI.rows + 1, MainGUI.cols + 1));
     setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-      
+    int flag;  // to print axis labels only once and not for (number of robots time)
     for (int i = 0; i < MainGUI.rows + 1; i++) {
       for (int j = -1; j < MainGUI.cols; j++) {
         JPanel pan = new JPanel();  
         pan.setEnabled(true);
         pan.setBackground(Color.GRAY);
-        pan.setPreferredSize(new Dimension(getWidth(), getHeight()));	
+        pan.setPreferredSize(new Dimension(getWidth(), getHeight()));
+        flag = 1;	
         for(Robot r1:r){
         	pair p=r1.RoboLoc;
             if ((i < MainGUI.rows) && (j >= 0)&&(((i<p.first+rangeView&&i>p.first-rangeView)&&(j<p.second+rangeView&&j>p.second-rangeView))||(visitedGrid[i][j]==1)))
@@ -871,17 +945,21 @@ package algo;
             pan.setName(i + " " + j);
             }
           else if ((i == MainGUI.rows) && (j < 0)) { pan.add(new JLabel(" "));
-          } else if (i == MainGUI.rows) {
+          } 
+          else if (i == MainGUI.rows && flag ==1) {
             JLabel axisLabel = new JLabel(Integer.toString(j));
             axisLabel.setFont(new Font("serif", 1, MainGUI.this.axisScale / MainGUI.cols));
             pan.add(axisLabel);
+            flag=0;
             }
-          else if (j < 0) {
+          else if (j < 0 && flag==1) {
             JLabel axisLabel = new JLabel(Integer.toString(i));
             axisLabel.setFont(new Font("serif", 1, MainGUI.this.axisScale / MainGUI.rows));
             pan.add(axisLabel);
+            flag=0;
             }
         }
+
           
 
         add(pan);
@@ -967,9 +1045,10 @@ package algo;
                  }
                }
                
-               
 
-               
+
+
+
                public static void main(String[] arg)
                {
             	   new MainGUI();

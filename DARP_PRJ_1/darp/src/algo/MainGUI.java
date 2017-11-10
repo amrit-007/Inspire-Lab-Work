@@ -1,17 +1,26 @@
 package algo;
+import pathfinding.*;
+import pathfinding.Map;
 
-
-	 import java.awt.*;
-     import java.awt.event.*;
-     import java.util.*;
-     import javax.swing.*;
-     import java.io.*;
-     //import javax.swing.event.ChangeEvent;
-     //import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import javax.swing.*;
+import java.io.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+//import java.lang.Math;
+//import javax.swing.event.ChangeEvent;
+//import javax.swing.event.ChangeListener;
  
 			public class MainGUI
 			{
         	 private int c1=0;
+        	 private static int no_chromosomes = 10; //stores number of chromosomes in each generation
+        	 private static int no_groups_for_generations_k = 2;
+        	 private static int no_generations = 50;
+        	 //private static int no_tasks = 7; //stores the number of tasks in the problem
         	 private ArrayList<Color> colorArr;
 			 public Thread t1;	//Thread for all the robots to start moving
 			 public static int rangeView=100; //Range of robot sensing		
@@ -26,6 +35,19 @@ package algo;
 			 public static Integer numberofrobots;
 			 public ArrayList<pair> listofrobots; //to store all robots in the problem with their initial positions
 			 public static int[][][] travelcosts_ijk; //cost matrix for going from ith task to kth task by kth robot
+
+			 public static Integer[][] chromosomes; //to store the population at each generation
+			 public static Integer[][] gene_partition_current_gen = new Integer[no_chromosomes][2]; //to store the gene apportions of curren generation
+			 
+			 public static Integer[][] best_chromosomes;
+			 public static Integer[][] gene_partition_best_chromosomes = new Integer[no_generations][2];
+			 public static Integer[] fitness_function_value_best_chromosomes = new Integer[no_generations];
+
+			 public static Integer[] temp_chromosome;
+			 public static Integer[] global_best_soln;
+
+			 public static Integer[] fitness_function_value;
+			 public Map<ExampleNode> myMap;
 			 /*
 			  * Image Icons for start run and stop buttons
 			  * 
@@ -89,9 +111,717 @@ package algo;
 				return a1.get(0);
 				}
 
+				//to generate initial population
+                public void generate_initial_chromosomes() 
+                {
+                		for(int i = 0; i<no_chromosomes ; i++)
+                		{
+                			for (int j = 0; j < numberoftasks; j++) 
+                			{
+                				chromosomes[i][j] = j+1;
+                			}
+     				    Collections.shuffle(Arrays.asList(chromosomes[i]));
+     				    //System.out.println(Arrays.toString(chromosomes[i]));
+     				    //System.out.printf("here%d\n",fitness_function_value[i]);
+                		}
+                }
+
+                public void generate_initial_chromosomes(Integer[] b,int n) 
+                {
+
+                		//System.out.println(Arrays.toString(b));   
+                		best_chromosomes[n-1] = b;
+                		chromosomes[0] = b;
+                		for(int i = 1; i<no_chromosomes ; i++)
+                		{
+                			for (int j = 0; j < numberoftasks; j++) 
+                			{
+                				chromosomes[i][j] = j+1;
+                			}
+     				    Collections.shuffle(Arrays.asList(chromosomes[i]));
+     				    //System.out.println(Arrays.toString(chromosomes[i]));
+     				    //System.out.printf("here%d\n",fitness_function_value[i]);
+                		}
+                }		
+
+                //function to generate geneapportions to divide the chromosome into numberofrobots segments 
+                public void generate_initial_gene_partitions() 
+                {
+                	int first = 0,second=0;
+                	double val;
+                	int flag;
+                	Random r = new Random();
+                	for(int i=0;i<no_chromosomes;i++)
+                	{
+                		flag = 0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if(val >=1 && val < numberoftasks)
+	                		{	
+	                			first = (int) val;
+	                			flag = 1;
+	                		}	
+                		}
+
+                		flag=0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if((int) val == first)
+	                			continue;
+	                		
+	                		if(val >=1 && val < numberoftasks && (val != first))
+	                		{
+	                			
+	                				//flag=0;
+
+	                			second = (int) val;
+	                			flag = 1;
+                			}
+                		}		
+                		if(first < second)
+                		{
+                			gene_partition_current_gen[i][0] = first;
+                			gene_partition_current_gen[i][1] = second;
+                		}
+                		else
+                		{
+                			gene_partition_current_gen[i][1] = first;
+                			gene_partition_current_gen[i][0] = second;
+                		}		
+                		//System.out.printf("%d %d\n",gene_partition_current_gen[i][0],gene_partition_current_gen[i][1]);
+                	}
+				}
+
+				public void generate_gene_partitions(double std_dev, double[] mean)
+				{
+					int first = 0,second=0;
+                	double val;
+                	int flag;
+                	Random r = new Random();
+                	for(int i=0;i<no_chromosomes;i++)
+                	{
+                		flag = 0;
+                		while(flag==0)
+                		{
+	                		val = (r.nextGaussian() * std_dev) + mean[0];
+	                		if(val >=1 && val < numberoftasks)
+	                		{	
+	                			first = (int) val;
+	                			flag = 1;
+	                		}	
+                		}
+
+                		flag=0;
+                		while(flag==0)
+                		{
+	                		val = (r.nextGaussian() * std_dev) + mean[1];
+	                		if((int) val == first)
+	                			continue;
+	                		
+	                		if(val >=1 && val < numberoftasks && (val != first))
+	                		{
+	                			
+	                				//flag=0;
+
+	                			second = (int) val;
+	                			flag = 1;
+                			}
+                		}		
+                		if(first < second)
+                		{
+                			gene_partition_current_gen[i][0] = first;
+                			gene_partition_current_gen[i][1] = second;
+                		}
+                		else
+                		{
+                			gene_partition_current_gen[i][1] = first;
+                			gene_partition_current_gen[i][0] = second;
+                		}		
+                		//System.out.printf("%d %d\n",gene_partition_current_gen[i][0],gene_partition_current_gen[i][1]);
+                	}
+				}
+
+				public void calculate_fitness_function()
+				{
+					int i,j;
+					int temp;
+					for(i=0;i<no_chromosomes;i++)
+					{
+						//loop for first robot
+						fitness_function_value[i]=0; //make it zero before starting to calculate total cost
+						temp =0;
+						for(j=0;j<gene_partition_current_gen[i][0];j++)
+						{
+							//to add cost of robot travelling to first task from its start position
+							if(j==0)
+								temp += travelcosts_ijk[0][chromosomes[i][j]][0];
+							//adding costs from a task to another
+							if(j>0)
+								temp += travelcosts_ijk[chromosomes[i][j-1]][chromosomes[i][j]][0];
+							//adding the returning cost from last task to its start position
+							if(j==(gene_partition_current_gen[i][0]-1))
+								temp+= travelcosts_ijk[chromosomes[i][j]][0][0];
+
+
+						}
+						fitness_function_value[i] += temp;
+						temp = 0;
+
+						//loop for second robot
+						for(;j<gene_partition_current_gen[i][1];j++)
+						{
+							if(j==gene_partition_current_gen[i][0])
+								temp += travelcosts_ijk[0][chromosomes[i][j]][1];
+
+							if(j>gene_partition_current_gen[i][0])
+								temp += travelcosts_ijk[chromosomes[i][j-1]][chromosomes[i][j]][1];
+
+							if(j==(gene_partition_current_gen[i][1]-1))
+								temp += travelcosts_ijk[chromosomes[i][j]][0][1];
+						}	
+						fitness_function_value[i] += temp;
+						temp = 0;
+						//loop for third robot	
+						for(;j<numberoftasks;j++)
+						{
+							if(j==gene_partition_current_gen[i][1])
+								temp += travelcosts_ijk[0][chromosomes[i][j]][2];
+
+							if(j>gene_partition_current_gen[i][1])
+								temp += travelcosts_ijk[chromosomes[i][j-1]][chromosomes[i][j]][2];
+
+							if(j==(numberoftasks-1))
+								temp += travelcosts_ijk[chromosomes[i][j]][0][2];
+						}
+						fitness_function_value[i] += temp;
+						//System.out.printf("%d\n",fitness_function_value[i]);
+					} 
+				}
+
+
+				public int calculate_fitness_function_chromosome(Integer[] tc,int p1,int p2)
+				{
+					int j;
+					int temp;
+					int value=0;
+					//for(i=0;i<no_chromosomes;i++)
+					//{
+						//loop for first robot
+						value=0; //make it zero before starting to calculate total cost
+						temp=0;
+						for(j=0;j<p1;j++)
+						{
+							//to add cost of robot travelling to first task from its start position
+							if(j==0)
+								temp += travelcosts_ijk[0][tc[j]][0];
+							//adding costs from a task to another
+							if(j>0)
+								temp += travelcosts_ijk[tc[j-1]][tc[j]][0];
+							//adding the returning cost from last task to its start position
+							if(j==(p1-1))
+								temp+= travelcosts_ijk[tc[j]][0][0];
+
+
+						}
+						value += temp;
+						temp = 0;
+
+						//loop for second robot
+						for(;j<p2;j++)
+						{
+							if(j==p1)
+								temp += travelcosts_ijk[0][tc[j]][1];
+
+							if(j>p1)
+								temp += travelcosts_ijk[tc[j-1]][tc[j]][1];
+
+							if(j==(p2-1))
+								temp += travelcosts_ijk[tc[j]][0][1];
+						}	
+						value += temp;
+						temp = 0;
+						//loop for third robot	
+						for(;j<numberoftasks;j++)
+						{
+							if(j==p2)
+								temp += travelcosts_ijk[0][tc[j]][2];
+
+							if(j>p2)
+								temp += travelcosts_ijk[tc[j-1]][tc[j]][2];
+
+							if(j==(numberoftasks-1))
+								temp += travelcosts_ijk[tc[j]][0][2];
+						}
+						value += temp;
+
+						return (value);
+						//System.out.printf("%d\n",value);
+					//} 
+				}
+
+				public void swap_mutation(Integer[] ch)
+				{
+					int flag=0;
+					double val;
+					int first =0,second=0,temp=0;
+					Random r = new Random();
+					//flag = 0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if(val >=0 && val < numberoftasks)
+	                		{	
+	                			first = (int) val;
+	                			flag = 1;
+	                		}	
+                		}
+
+                		flag=0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if((int) val == first)
+	                			continue;
+	                		
+	                		if(val >=0 && val < numberoftasks && (val != first))
+	                		{
+	                			//flag=0;
+	                			second = (int) val;
+	                			flag = 1;
+                			}
+                		}
+                		//System.out.println(Arrays.toString(ch));
+                		temp = ch[first];
+                		ch[first] = ch[second];
+                		ch[second] = temp;
+
+                		//System.out.printf("%d %d\n",first,second);
+                		
+                		//System.out.println(Arrays.toString(ch));
+				}
+
+				public void inversion_mutation(Integer[] ch)
+				{
+					int flag=0,first =0,second=0,temp=0,times=0;
+					double val;
+					Random r = new Random();
+					//flag = 0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if(val >=0 && val < numberoftasks)
+	                		{	
+	                			first = (int) val;
+	                			flag = 1;
+	                		}	
+                		}
+
+                		flag=0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if((int) val == first)
+	                			continue;
+	                		
+	                		if(val >=0 && val < numberoftasks && (val != first))
+	                		{
+	                			//flag=0;
+	                			second = (int) val;
+	                			flag = 1;
+                			}
+                		}
+                		//System.out.println(Arrays.toString(ch));
+                		//System.out.printf("%d %d\n",first,second);
+                		if(first > second)
+                		{
+                			temp = first;
+                			first = second;
+                			second = temp;
+                		}
+                		//System.out.printf("%d %d\n",first,second);
+                		times = (second-first) / 2;
+                		
+                		if((second-first)%2 != 0)
+                			times++;
+
+
+                		//System.out.printf("%d \n",times);
+                		//i = first;
+                		//j = second;
+                		while(times>0)
+                		{
+                			temp = ch[first];
+                			ch[first] = ch[second];
+                			ch[second] = temp;
+                			first++;
+                			second--;
+                			times--;
+                		}
+
+                		
+                		
+                		//System.out.println(Arrays.toString(ch));
+				}
+
+				public void insertion_mutation(Integer[] ch)
+				{
+					int flag=0,first=0,second=0,temp=0,i;
+					double val;
+					Random r = new Random();
+					//flag = 0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if(val >=0 && val < numberoftasks)
+	                		{	
+	                			first = (int) val;
+	                			flag = 1;
+	                		}	
+                		}
+
+                		flag=0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if((int) val == first)
+	                			continue;
+	                		
+	                		if(val >=0 && val < numberoftasks && (val != first))
+	                		{
+	                			//flag=0;
+	                			second = (int) val;
+	                			flag = 1;
+                			}
+                		}
+
+                	if(first > second)
+                	{
+                		temp = first;
+                		first = second;
+                		second = temp;
+                	}
+                	//System.out.printf("%d %d\n",first,second);
+                	//System.out.println(Arrays.toString(ch));		
+					for(i = second-1; i >= first ; i--)
+					{       
+						temp = ch[i+1];
+						ch[i+1] = ch[i];
+						ch[i] = temp; 
+					}
+					//System.out.println(Arrays.toString(ch));
+				}
+
+				public void displacement_mutation(Integer[] ch)
+				{
+					int flag=0,first=0,second=0,target=0,temp=0,i,no_iterations=0;
+					double val;
+					Random r = new Random();
+					//flag = 0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if(val >=0 && val < numberoftasks)
+	                		{	
+	                			first = (int) val;
+	                			flag = 1;
+	                		}	
+                		}
+
+                		flag=0;
+                		while(flag==0)
+                		{
+	                		val = r.nextGaussian() * numberoftasks;
+	                		if((int) val == first)
+	                			continue;
+	                		
+	                		if(val >=0 && val < numberoftasks && (val != first))
+	                		{
+	                			//flag=0;
+	                			second = (int) val;
+	                			flag = 1;
+                			}
+                		}
+
+                	if(first > second)
+                	{
+                		temp = first;
+                		first = second;
+                		second = temp;
+                	}
+
+                	flag=0;
+                	while(flag==0)
+                	{	
+	                	val = r.nextGaussian() * first;    
+		                		
+		                if(val >=0)
+		                {
+		                	target = (int) val;
+		                	flag=1;
+	                	}
+	                }	
+
+                	//System.out.printf("%d %d %d\n",first,second,target);
+                	//System.out.println(Arrays.toString(ch));	
+	                
+	                while(no_iterations <= second-first)
+	                {	
+	                	i = first+no_iterations-1;
+						for(; i >= (target+no_iterations); i--)
+						{       
+							temp = ch[i+1];
+							ch[i+1] = ch[i];
+							ch[i] = temp; 
+						}
+						no_iterations++;
+					}	
+					//System.out.println(Arrays.toString(ch));
+				}
+
+				public int best_chromosome()
+				{
+					int i,min_index = 0;
+					//System.out.printf("%d %d\n",fitness_function_value[0],min_index);
+					for(i=1;i<no_chromosomes;i++)
+					{
+						//System.out.printf("%d %d\n",fitness_function_value[i],min_index);
+						//System.out.println(min_index);
+						if(fitness_function_value[i] < fitness_function_value[min_index])
+							min_index = i;
+					}
+					//System.out.println(min_index);
+					
+					return (min_index);
+				}
+
+				public void set_global_best_chromosome()
+				{
+					int i,min_index = 0;
+					//System.out.printf("%d %d\n",fitness_function_value[0],min_index);
+					for(i=1;i<no_chromosomes;i++)
+					{
+						//System.out.printf("%d %d\n",fitness_function_value[i],min_index);
+						//System.out.println(min_index);
+						if(fitness_function_value_best_chromosomes[i] < fitness_function_value_best_chromosomes[min_index])
+							min_index = i;
+					}
+					//System.out.println(min_index);
+					for(i=0;i<numberoftasks;i++)
+						global_best_soln[i] = best_chromosomes[min_index][i];
+
+					System.out.printf("%d the gene apportions are - %d %d",fitness_function_value_best_chromosomes[min_index],gene_partition_best_chromosomes[min_index][0],gene_partition_best_chromosomes[min_index][1]);
+					System.out.println(Arrays.toString(global_best_soln));
+					//return (min_index);
+				}
+
+
+				
+				public void generate_generations()
+				{
+					//first generation is the initial one
+					//population size = number of chromosomes in each gen = 10
+					// number of groups we want to divide into for applying operations = k = 2
+					// (10/5*2) = 1 (one best chromosome is reproduced without change in each generation)
+					int best_index=0,i,j;
+					//Integer[] temp_best = new Integer[numberoftasks];
+					int generation_number = 1;
+					double[] mean = new double[2];
+					mean[0] = mean[1] = 0.0;
+					double std_dev = 0.03*numberoftasks;
+
+					while(generation_number <= no_generations)
+					{	
+
+						best_index = best_chromosome(); //compute the best chromosome index in each population
+						//best_chromosomes[generation_number-1] = chromosomes[best_index]; //store the best in the best chromosome pool, one from each gen
+
+						//System.out.printf("%d \n",fitness_function_value[best_index]);
+						//System.out.println(Arrays.toString(best_chromosomes[generation_number-1]));
+						
+						//calculating mean for each new generation
+						//System.out.printf("\n%d partition of best index %d\n",gene_partition_current_gen[best_index][0],gene_partition_current_gen[best_index][1]);
+						/*if(generation_number==1)
+						{	
+							mean[0] = gene_partition_current_gen[best_index][0];
+							mean[1] = gene_partition_current_gen[best_index][1];
+						}*/	
+						//else
+						//{
+							mean[0] *= generation_number-1;
+							mean[1] *= generation_number-1;
+							mean[0] += gene_partition_current_gen[best_index][0]; 
+							mean[0] /= generation_number;
+							mean[1] += gene_partition_current_gen[best_index][1];
+							mean[1] /= generation_number;
+						//}
+						//System.out.printf("\n%f %f\n",mean[0],mean[1]);	
+								
+
+						//four mutation techniques applied to best in current population
+						//System.out.println(Arrays.toString(chromosomes[best_index]));	
+						swap_mutation(chromosomes[best_index]);
+						//System.out.println(Arrays.toString(chromosomes[best_index]));
+						insertion_mutation(chromosomes[best_index]);
+						//System.out.println(Arrays.toString(chromosomes[best_index]));
+						inversion_mutation(chromosomes[best_index]);
+						//System.out.println(Arrays.toString(chromosomes[best_index]));
+						displacement_mutation(chromosomes[best_index]);
+						//System.out.println(Arrays.toString(chromosomes[best_index]));
+
+						for(j=0;j<numberoftasks;j++)
+							best_chromosomes[(generation_number-1)][j] = chromosomes[best_index][j];
+
+						gene_partition_best_chromosomes[generation_number-1][0] = gene_partition_current_gen[best_index][0];
+						gene_partition_best_chromosomes[generation_number-1][1] = gene_partition_current_gen[best_index][1];
+						fitness_function_value_best_chromosomes[generation_number-1] = fitness_function_value[best_index];
+						//best_chromosomes[(generation_number-1)] = chromosomes[best_index]; 
+						//System.out.printf("bestchromosome gen-1 %d %d",generation_number-1,fitness_function_value[best_index]);
+						//System.out.println(Arrays.toString(best_chromosomes[generation_number-1]));
+
+						//temp_best = chromosomes[best_index];
+					/*	for(j=0;j<numberoftasks;j++)
+							temp_best[j] = chromosomes[best_index][j];*/
+
+						//System.out.printf("\ntempbest");
+						//System.out.println(Arrays.toString(temp_best));
+
+						generate_initial_chromosomes(best_chromosomes[(generation_number-1)],generation_number);
+						//System.out.printf("\n");
+
+
+
+						generate_gene_partitions(std_dev,mean);
+
+
+
+						/*System.out.printf("\ntempbest");
+						System.out.println(Arrays.toString(temp_best));
+						System.out.printf("\n");*/
+						//chromosomes[0] = temp_best; //retain the best from last generation as the 0th chromosome in the new generation
+						//System.out.println(Arrays.toString(chromosomes[0]));
+						calculate_fitness_function();
+
+						generation_number++;
+					}
+					//System.out.printf("\n");
+					/*for(i=0;i<no_generations;i++)
+					{
+						//System.out.printf("bestchromosome gen-1 %d",fitness_function_value[best_index]);
+						//System.out.println(Arrays.toString(best_chromosomes[i]));
+						System.out.printf("\n %d partitions - %d %d\n",fitness_function_value_best_chromosomes[i],gene_partition_best_chromosomes[i][0],gene_partition_best_chromosomes[i][1]);
+					}*/
+				}
+
+				public void print_best_chromosomes()
+				{
+					int i;
+					double av_ff_value=0;
+					for(i=0;i<no_generations;i++)
+					{
+						av_ff_value += fitness_function_value_best_chromosomes[i];
+						System.out.printf("%d %d the gene apportions are - %d %d",i+1,fitness_function_value_best_chromosomes[i],gene_partition_best_chromosomes[i][0],gene_partition_best_chromosomes[i][1]);
+						System.out.println(Arrays.toString(best_chromosomes[i]));
+					}
+					av_ff_value /= no_generations;
+					System.out.printf("\n average ff value: %f\n",av_ff_value);
+				}
+
+
+				public void lsearch_2nearest_neighbours()
+				{
+					int i,j,k;
+					int temp_index_value;
+					int temp_ff_value=0;
+					//Integer[] temp = new Integer[numberoftasks];
+					for(i=0;i<no_generations;i++)
+					{
+						for(k=0;k<numberoftasks;k++)
+							temp_chromosome[k] = best_chromosomes[i][k];
+
+						temp_ff_value = fitness_function_value_best_chromosomes[i];
+
+						for(j=0;j<(gene_partition_best_chromosomes[i][0]-1);j++)
+						{
+							temp_index_value = temp_chromosome[j];
+							temp_chromosome[j] = temp_chromosome[j+1];
+							temp_chromosome[j+1] = temp_index_value;
+
+							temp_ff_value = calculate_fitness_function_chromosome(temp_chromosome,gene_partition_best_chromosomes[i][0],gene_partition_best_chromosomes[i][1]);
+
+							if(temp_ff_value < fitness_function_value_best_chromosomes[i])
+							{
+								for(k=0;k<numberoftasks;k++)
+									best_chromosomes[i][k] = temp_chromosome[k];
+
+								fitness_function_value_best_chromosomes[i] = temp_ff_value;
+							}
+							else
+							{
+								temp_index_value = temp_chromosome[j];
+								temp_chromosome[j] = temp_chromosome[j+1];
+								temp_chromosome[j+1] = temp_index_value;
+							}	
+						}
+						
+
+						//loop for second robot
+						for(j=gene_partition_best_chromosomes[i][0];j<(gene_partition_best_chromosomes[i][1]-1);j++)
+						{
+							temp_index_value = temp_chromosome[j];
+							temp_chromosome[j] = temp_chromosome[j+1];
+							temp_chromosome[j+1] = temp_index_value;
+
+							temp_ff_value = calculate_fitness_function_chromosome(temp_chromosome,gene_partition_best_chromosomes[i][0],gene_partition_best_chromosomes[i][1]);
+
+							if(temp_ff_value < fitness_function_value_best_chromosomes[i])
+							{
+								for(k=0;k<numberoftasks;k++)
+									best_chromosomes[i][k] = temp_chromosome[k];
+
+								fitness_function_value_best_chromosomes[i] = temp_ff_value;
+							}
+							else
+							{
+								temp_index_value = temp_chromosome[j];
+								temp_chromosome[j] = temp_chromosome[j+1];
+								temp_chromosome[j+1] = temp_index_value;
+							}	
+						}	
+						
+						//loop for third robot	
+						for(j=gene_partition_best_chromosomes[i][1];j<(numberoftasks-1);j++)
+						{
+							temp_index_value = temp_chromosome[j];
+							temp_chromosome[j] = temp_chromosome[j+1];
+							temp_chromosome[j+1] = temp_index_value;
+
+							temp_ff_value = calculate_fitness_function_chromosome(temp_chromosome,gene_partition_best_chromosomes[i][0],gene_partition_best_chromosomes[i][1]);
+
+							if(temp_ff_value < fitness_function_value_best_chromosomes[i])
+							{
+								for(k=0;k<numberoftasks;k++)
+									best_chromosomes[i][k] = temp_chromosome[k];
+
+								fitness_function_value_best_chromosomes[i] = temp_ff_value;
+							}
+							else
+							{
+								temp_index_value = temp_chromosome[j];
+								temp_chromosome[j] = temp_chromosome[j+1];
+								temp_chromosome[j+1] = temp_index_value;
+							}	
+						}
+					}	
+				}
+
+
+                
                @SuppressWarnings("static-access")
 			MainGUI() // Constructor
                {
+            	   
             	   colorArr=new ArrayList<>();
             	   Robots=new ArrayList<>();
             	   selectedPanel=new ArrayList<>();
@@ -125,6 +855,8 @@ package algo;
 		       this.costoftasks = new ArrayList<Integer>();
 		       this.listoftasks = new ArrayList<pair>();
 		       this.listofrobots = new ArrayList<pair>();
+		       this.fitness_function_value = new Integer[no_chromosomes];
+
 		       //this.gridflag = 0;
 		       //textboxRows.setLayout(0,0,40,20);
 		       //textboxRows.setLayout(0,30,40,20);
@@ -145,6 +877,15 @@ package algo;
 		       this.mainFrame.setVisible(true);
                }
 
+
+               public void build_map_for_cost_calculation()
+               {
+               		myMap = new Map<ExampleNode>(MainGUI.rows, MainGUI.cols, new ExampleFactory());
+       	 			//List<ExampleNode> path = myMap.findPath(0, 0, 2, 2);
+           		}
+
+              
+
                public void ReadTextFile() throws IOException 
 				{
 				    File inFile = new File ("C:\\Users\\Amrit\\Documents\\Eclipse\\darp_mycopy\\src\\resources\\input.txt");
@@ -160,7 +901,7 @@ package algo;
 				      if(temp[0].equals("o"))
 				      {
 				    	a =  Integer.parseInt(temp[1]);
-				    	b =  Integer.parseInt(temp[2]);
+				    	b =  Integer.parseInt(temp[2]);	
 				    	c =  Integer.parseInt(temp[3]);
 				    	d =  Integer.parseInt(temp[4]);				    	
 				    	for(i=a;i<=b;i++)
@@ -168,6 +909,7 @@ package algo;
 				    		for(j=c;j<=d;j++)
 				    		{
 				    			MainGUI.EnvironmentGrid[i][j] = 1;
+				    			myMap.setWalkable(i,j,false);
 				    		}
 				    	}
 				      }
@@ -179,6 +921,7 @@ package algo;
 					    MainGUI.EnvironmentGrid[a][b] = 2;
 					    MainGUI.numberofrobots++;
 					    listofrobots.add(p);
+					    //myMap.setWalkable(a,b,false);
 				      }
 				      else if(temp[0].equals("t"))
 				      {
@@ -193,7 +936,7 @@ package algo;
 				      
 				    }
 				    sc.close();
-				 
+				    
 				    
 				   /* for(i=0;i<numberofrobots;i++)
 				    {
@@ -203,48 +946,74 @@ package algo;
 				    
 				}
                
-               //function to return h(n) value to apply AStar Algorithm
-               public int heuristic_value_calc(pair a,pair b){  
-            	   return(Math.abs(a.first-b.first) + Math.abs(a.second-b.second));
-               }
-               
-               //function to implement AStar Algorithm and find costs to travel between 2 nodes
-				public int astar_search(pair a,pair b){
-					
-					
-					return (0);
-				}
-               
+                              
                //function to compute cost for travelling from ith to jth task by kth robot
-     			public void cost_calc(){
-
-     				MainGUI.travelcosts_ijk = new int[numberoftasks+1][numberoftasks+1][numberofrobots];
-
+     			public void cost_calc()
+     			{
      				int i,j,k;
-     				//int temp_nooftasks = MainGUI.numberoftasks;
-     				for(k=0;k<numberofrobots;k++)
-     				{
-	     				for(i=0;i<=MainGUI.numberoftasks;i++)
-	     				{
-	     					for(j=1;j<=MainGUI.numberoftasks;j++)
-	     					{
+     				travelcosts_ijk = new int[numberoftasks+1][numberoftasks+1][numberofrobots];
+            	    //we fill the matrix with zeros and use it as a check to not compute costs twice between any two locations
+					for(k=0;k<numberofrobots;k++)
+				    {
+				    	for(i=0;i<=numberoftasks;i++)
+				    	{
+				    		for(j=0;j<=numberoftasks;j++)
+				    		{
+				    			travelcosts_ijk[i][j][k] = 0;
+				    		}
+				    	}
+				    }			            	
+				    List<ExampleNode> path; //temp file to compute costs
+				    	//System.out.printf("%d %d\n",numberofrobots,numberoftasks);
+				    	//System.out.printf("%d %d\n",listofrobots.get(k).first,listofrobots.get(k).second);
+				    	//i=0;
+				    for(k=0;k<numberofrobots;k++)
+				    {	
+				    	for(i=0;i<=numberoftasks;i++)
+				    	{
+				    		//j=0;
+				    		for(j=0;j<=numberoftasks;j++)
+				    		{
 
-	     						if(i==j)
-	     						{
-	     							MainGUI.travelcosts_ijk[i][j][k] = Integer.MAX_VALUE;
-	     						}	
-	     						if(i==0)
-	     						{
-	     							MainGUI.travelcosts_ijk[i][j][k] = astar_search(listofrobots.get(k),listoftasks.get(j));
-	     						}
-	     						
-	     						MainGUI.travelcosts_ijk[i][j][k] = astar_search(listoftasks.get(i),listoftasks.get(j));
-	     					}
-	     				}
-     				}	
+				    			if(i==j)
+			 	    				continue;
 
+			 	    			/*if(!(travelcosts_ijk[i][j][k]==0))
+			 	    				continue;*/
+
+			 	    			if(i>0 && j>0)
+			 	    			{
+			 	    				path = myMap.findPath(listoftasks.get(i-1).first,listoftasks.get(i-1).second,listoftasks.get(j-1).first,listoftasks.get(j-1).second);
+			 	    				travelcosts_ijk[i][j][k] = path.size();
+			 	    				travelcosts_ijk[j][i][k] = path.size();
+			 	    			}
+			 	    			else if(i==0)
+			 	    			{
+			 	    				path = myMap.findPath(listofrobots.get(k).first,listofrobots.get(k).second,listoftasks.get(j-1).first,listoftasks.get(j-1).second);
+			 	    				//System.out.printf("%d %d\n",listofrobots.get(k).first,listofrobots.get(k).second);
+			 	    				travelcosts_ijk[i][j][k] = path.size();
+			 	    				travelcosts_ijk[j][i][k] = path.size();
+			 	    			}	
+
+				    		}	
+				    	}
+				    }	
+ 	    
+ 	    			//printing the costs to check
+				    /*for(k=0;k<numberofrobots;k++)
+				    {
+				    	for(i=0;i<=numberoftasks;i++)
+				    	{
+				    		for(j=0;j<=numberoftasks;j++)
+				    		{
+				    			System.out.printf("%d ",travelcosts_ijk[i][j][k]);
+				    		}
+				    		System.out.printf("\n");
+				    	}
+				    	System.out.printf("\n\n");
+				    }
+				    System.out.printf("\n");*/	
      			}
-
 
              
                private void DefineRightPanel() //Defines the Right Panel with details
@@ -632,6 +1401,7 @@ package algo;
 		            {
 					MainGUI.rows=Integer.parseInt(textboxRows.getText());
 					MainGUI.cols=Integer.parseInt(textboxCols.getText());
+					build_map_for_cost_calculation(); //initiate map for cost calculations
 		             MainGUI.this.appendToPane("The grid [" + MainGUI.rows + "," + MainGUI.cols + "] has been created\n\n", Color.WHITE);
 		             MainGUI.this.appendToPane("Define the Robots initial positions along with the fixed obstacles\n\n", Color.WHITE);
 		             try {
@@ -790,13 +1560,14 @@ package algo;
                {
 				private static final long serialVersionUID = 1L;
 				boolean enable = true;
+				int i,j;
                  GridPane() throws IOException
                  {
 		         setLayout(new java.awt.GridLayout(MainGUI.rows + 1, MainGUI.cols + 1));
 		         setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
                    
-		         for (int i = 0; i < MainGUI.rows + 1; i++) {
-		           for (int j = -1; j < MainGUI.cols; j++) {
+		         for (i = 0; i < MainGUI.rows + 1; i++) {
+		           for (j = -1; j < MainGUI.cols; j++) {
 		             JPanel pan = new JPanel();
                        
 		             pan.setEnabled(true);
@@ -830,6 +1601,30 @@ package algo;
                    }
                    
              		ReadTextFile();
+             
+            	    chromosomes = new Integer[no_chromosomes][numberoftasks];
+            	    best_chromosomes = new Integer[no_generations][numberoftasks];
+            	    temp_chromosome = new Integer[numberoftasks];
+            	    global_best_soln = new Integer[numberoftasks];
+            	    //intial generation functions
+            	    //int times = 10;
+            	    //while(times>0)
+            	    //{
+	            	    generate_initial_chromosomes();
+	            	    generate_initial_gene_partitions();
+	            	    cost_calc(); //one time thing
+	            	    calculate_fitness_function();
+	            	    generate_generations();
+	            	    //print_best_chromosomes();
+	            	    lsearch_2nearest_neighbours();
+	            	    //System.out.printf("\nafter local search\n");
+	            	    //print_best_chromosomes();
+
+	            	    set_global_best_chromosome();
+
+	            	//    times--;
+	            	//}    
+            	            	
 		         repaint();
                  }
               

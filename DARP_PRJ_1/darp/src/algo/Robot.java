@@ -19,7 +19,7 @@ public class Robot {
 	public static ArrayList<pair> ObsArray=new ArrayList<>(); // Coordinates of obstacles
 	public ArrayList<pair> path; // final calculated path
 	public ArrayList<pair> goalnrobot; // combined array list of robots and goals to be traversed in order
-	public static int velocity; //to store indi. velocities of each robot
+	//public static int velocity; //to store indi. velocities of each robot
 	public void addGoal(pair p){ // Append goal to array list of goals
 		Goals.add(p);
 	}
@@ -27,7 +27,7 @@ public class Robot {
 		RoboLoc=p;
 		Goals=new ArrayList<>();
 		path=new ArrayList<>();
-		velocity = 1; //using homogeneous value as of now for all
+		//velocity = 1; //using homogeneous value as of now for all
 	}
 
 	public void setPath(){  // BFS algorithm to determine shortest distance for a robot via all its goals

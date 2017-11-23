@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
         	 private int c1=0;
         	 private static int no_chromosomes = 10; //stores number of chromosomes in each generation
         	 private static int no_groups_for_generations_k = 2;
-        	 private static int no_generations = 50;
+        	 private static int no_generations = 100;
         	 //private static int no_tasks = 7; //stores the number of tasks in the problem
         	 private ArrayList<Color> colorArr;
 			 public Thread t1;	//Thread for all the robots to start moving
@@ -599,6 +599,7 @@ import java.util.concurrent.ThreadLocalRandom;
 				public void set_global_best_chromosome()
 				{
 					int i,min_index = 0;
+					int flag;
 					//System.out.printf("%d %d\n",fitness_function_value[0],min_index);
 					for(i=1;i<no_chromosomes;i++)
 					{
@@ -613,6 +614,70 @@ import java.util.concurrent.ThreadLocalRandom;
 
 					System.out.printf("%d the gene apportions are - %d %d",fitness_function_value_best_chromosomes[min_index],gene_partition_best_chromosomes[min_index][0],gene_partition_best_chromosomes[min_index][1]);
 					System.out.println(Arrays.toString(global_best_soln));
+
+					
+
+					//for(i=0;i<numberoftasks;i++)
+					//{
+						i=0;
+						flag=0;
+						//System.out.printf("%d\n",i);
+						while(true)
+						{
+							//System.out.printf("%d %d first gene apportion\n",gene_partition_best_chromosomes[min_index][0],global_best_soln[i]);
+							if(flag==0)
+							{
+								m=new Robot(listofrobots.get(0));
+								//Robots.add(m);
+								flag=1;
+							}
+							//System.out.printf("i = %d\n",i);
+							m.addGoal(listoftasks.get(global_best_soln[i]-1));
+							i++;
+
+							if(i==gene_partition_best_chromosomes[min_index][0])
+								break;
+						}
+						Robots.add(m);
+
+						flag=0;
+						while(true)
+						{
+							//System.out.printf("%d %d first gene apportion and select ch value\n",gene_partition_best_chromosomes[min_index][1],global_best_soln[i]);
+							if(flag==0)
+							{
+								m=new Robot(listofrobots.get(1));
+								//Robots.add(m);
+								flag=1;
+							}
+							//System.out.printf("i = %d\n",i);
+							m.addGoal(listoftasks.get(global_best_soln[i]-1));
+							i++;
+
+							if(i==gene_partition_best_chromosomes[min_index][1])
+								break;
+						}
+						Robots.add(m);
+
+						flag=0;
+						while(true)
+						{
+							if(flag==0)
+							{
+								m=new Robot(listofrobots.get(2));
+								//Robots.add(m);
+								flag=1;
+							}
+							m.addGoal(listoftasks.get(global_best_soln[i]-1));
+							i++;
+
+							if(i==numberoftasks)
+								break;
+						}
+						Robots.add(m);
+						
+					//}
+
 					//return (min_index);
 				}
 
@@ -921,6 +986,10 @@ import java.util.concurrent.ThreadLocalRandom;
 					    MainGUI.EnvironmentGrid[a][b] = 2;
 					    MainGUI.numberofrobots++;
 					    listofrobots.add(p);
+
+						/*m=new Robot(p);
+						Robots.add(m);*/
+
 					    //myMap.setWalkable(a,b,false);
 				      }
 				      else if(temp[0].equals("t"))
@@ -1792,10 +1861,13 @@ import java.util.concurrent.ThreadLocalRandom;
 		           	String[] iAndJ = clickedBox.getName().split("\\s+");
 					pair p=new pair(Integer.parseInt(iAndJ[0]),Integer.parseInt(iAndJ[1]));
 					m=MainGUI.this.getRobot(p);	
-					if(m==null){
+					/*if(m==null){
 						m=new Robot(p);
 						Robots.add(m);
-						}
+
+						for(int t=0;t<numberofrobots;i++)
+							Robots.add(listofrobots[t]);
+						}*/
 										
 					   }
 					   else if(clickedBox.getBackground()==Color.GRAY){
